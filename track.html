@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calorie-Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: #f0f0f0;
+            font-size: 18px;
+        }
+        h1 {
+            color: #333;
+            font-size: 2.5em;
+        }
+        h2 {
+            color: #444;
+            font-size: 1.8em;
+        }
+        #app {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 15px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        input[type="text"], input[type="number"] {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            flex-grow: 1;
+            font-size: 1em;
+        }
+        button {
+            padding: 12px 24px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #totals {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-top: 30px;
+        }
+        #clear-all {
+            background-color: #f44336;
+            margin-top: 20px;
+        }
+        #clear-all:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>Calorie-Tracker</h1>
+        
+        <h2>Add Food</h2>
+        <form id="food-form">
+            <input type="text" id="food-input" placeholder="Food item" required>
+            <input type="number" id="calories-input" placeholder="Calories" required>
+            <input type="number" id="protein-input" placeholder="Protein (g)" required step="0.1">
+            <button type="submit">Add</button>
+        </form>
+
+        <h2>Today's Log</h2>
+        <table id="food-table">
+            <thead>
+                <tr>
+                    <th>Food</th>
+                    <th>Calories</th>
+                    <th>Protein (g)</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <div id="totals"></div>
+        <button id="clear-all">Clear All</button>
+    </div>
+
+    <script>
+        // Initialize the food log from localStorage or create an empty array
+        let foodLog = JSON.parse(localStorage.getItem('foodLog')) || [];
+
+        const foodForm = document.getElementById('food-form');
+        const foodInput = document.getElementById('food-input');
+        const caloriesInput = document.getElementById('calories-input');
+        const proteinInput = document.getElementById('protein-input');
+        const foodTable = document.getElementById('food-table').getElementsByTagName('tbody')[0];
+        const totalsElement = document.getElementById('totals');
+        const clearAllButton = document.getElementById('clear-all');
+
+        function updateTable() {
+            // Clear the table
+            foodTable.innerHTML = '';
+
+            // Add each food item to the table
+            foodLog.forEach((item, index) => {
+                const row = foodTable.insertRow();
+                row.innerHTML = `
+                    <td>${item.food}</td>
+                    <td>${item.calories}</td>
+                    <td>${item.protein}</td>
+                    <td><button onclick="removeItem(${index})">Remove</button></td>
+                `;
+            });
+
+            // Update the total calories and protein
+            const totalCalories = foodLog.reduce((sum, item) => sum + item.calories, 0);
+            const totalProtein = foodLog.reduce((sum, item) => sum + item.protein, 0);
+            totalsElement.innerHTML = `
+                Total Calories: ${totalCalories}<br>
+                Total Protein: ${totalProtein.toFixed(1)}g
+            `;
+
+            // Save to localStorage
+            localStorage.setItem('foodLog', JSON.stringify(foodLog));
+        }
+
+        function addFood(event) {
+            event.preventDefault();
+
+            const food = foodInput.value;
+            const calories = parseInt(caloriesInput.value);
+            const protein = parseFloat(proteinInput.value);
+
+            if (food && calories && protein) {
+                foodLog.push({ food, calories, protein });
+                updateTable();
+                foodInput.value = '';
+                caloriesInput.value = '';
+                proteinInput.value = '';
+            }
+        }
+
+        function removeItem(index) {
+            foodLog.splice(index, 1);
+            updateTable();
+        }
+
+        function clearAll() {
+            if (confirm('Are you sure you want to clear all items?')) {
+                foodLog = [];
+                updateTable();
+            }
+        }
+
+        foodForm.addEventListener('submit', addFood);
+        clearAllButton.addEventListener('click', clearAll);
+
+        // Initial table update
+        updateTable();
+    </script>
+</body>
+</html>
